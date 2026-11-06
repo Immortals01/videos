@@ -10,7 +10,7 @@ import os
 mode, out = sys.argv[1], sys.argv[2]
 t = time.time()
 tok_path = os.path.expanduser("~/.cache/huggingface/token")
-TOKEN = open(tok_path).read().strip() if os.path.exists(tok_path) else None
+TOKEN = os.environ.get("HF_TOKEN") or (open(tok_path).read().strip() if os.path.exists(tok_path) else None)
 STEPS = int(os.environ.get("KSTEPS", "24"))
 if mode == "schnell":
     prompt = sys.argv[3]

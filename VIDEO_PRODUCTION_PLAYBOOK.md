@@ -4,13 +4,13 @@
 
 > [!IMPORTANT]
 > **Do not start from zero — and do not overwrite the Surveyor 3 project.**
-> - **Finished Project 1 (*"Abandoned, But Not Forgotten"* — Surveyor 3 & Opportunity Trailer):** Lives in `/home/mohammed/.t3/projects/nasa/production/` and `/home/mohammed/.t3/projects/nasa/deliverables/`. Treat its `plates/`, `audio/`, `build/`, `reference/`, and `deliverables/` as a **read-only finished archive** so you never mix its files with a new video.
-> - **Shared Runtime Assets (Reuse in place — do NOT re-download):**
->   - Python environment: `/home/mohammed/.t3/projects/nasa/production/.venv/bin/python`
->   - Models (`kokoro-v1.0.onnx`, `voices-v1.0.bin`, `depth_small.onnx`): `/home/mohammed/.t3/projects/nasa/production/models/`
->   - Fonts (`Montserrat.ttf`, `CormorantGaramond.ttf`): `/home/mohammed/.t3/projects/nasa/production/fonts/`
->   - Planetary textures (`moon_2k.tif`, `mars_2k.jpg`, `earth_2k.jpg`): `/home/mohammed/.t3/projects/nasa/production/textures/`
-> - **Where to create a new video:** Create a fresh directory `/home/mohammed/.t3/projects/nasa/projects/<project_slug>/production/` and `/home/mohammed/.t3/projects/nasa/projects/<project_slug>/deliverables/`, symlink `models`, `fonts`, and `textures` from `/home/mohammed/.t3/projects/nasa/production/`, copy `src/*.py`, and replace only `script_lines.py`, `plates_batch.py`, `scenes.py`, and the chord/SFX tables in `audio.py`.
+> - **Finished Project 1 (*"Abandoned, But Not Forgotten"* — Surveyor 3 & Opportunity Trailer):** Lives in `./production/` and `./deliverables/` at the repository root. Treat its `plates/`, `audio/`, `build/`, `reference/`, and `deliverables/` as a **read-only finished archive** so you never mix its files with a new video.
+> - **Shared Runtime Assets (Reused across projects — auto-bootstrapped on a fresh clone by `./new_video_project.sh`):**
+>   - Python environment: `./production/.venv/bin/python`
+>   - Models (`kokoro-v1.0.onnx`, `voices-v1.0.bin`, `depth_small.onnx`): `./production/models/`
+>   - Fonts (`Montserrat.ttf`, `CormorantGaramond.ttf`): `./production/fonts/`
+>   - Planetary textures (`moon_2k.tif`, `mars_2k.jpg`, `earth_2k.jpg`): `./production/textures/`
+> - **Where to create a new video:** Run `./new_video_project.sh <project_slug>` from the repository root. It creates `./projects/<project_slug>/{production,deliverables}`, bootstraps/symlinks `.venv`, `models`, `fonts`, and `textures` from `./production/`, copies `src/*.py`, and leaves you ready to edit `script_lines.py`, `plates_batch.py`, `scenes.py`, and the chord/SFX tables in `audio.py`.
 
 ---
 
