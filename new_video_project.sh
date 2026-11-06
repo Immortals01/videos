@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Scaffold a clean, isolated video project folder that reuses the shared Python venv,
-# AI models (Kokoro TTS + Depth-Anything-V2), fonts, textures, and generic engine code,
-# without touching the Surveyor 3 ("Abandoned, But Not Forgotten") project files.
+# Scaffold a clean, isolated video project folder that reuses (or auto-bootstraps on a fresh
+# git clone) the shared Python venv, AI models (Kokoro TTS + Depth-Anything-V2), fonts,
+# textures, and generic engine code, without touching the Surveyor 3 project files.
 #
 # Usage:
 #   ./new_video_project.sh <new_project_slug>
@@ -13,7 +13,7 @@ if [ $# -lt 1 ]; then
 fi
 
 SLUG="$1"
-BASE="/home/mohammed/.t3/projects/nasa"
+BASE="$(cd "$(dirname "$0")" && pwd)"
 SHARED="$BASE/production"
 DEST="$BASE/projects/$SLUG"
 
@@ -22,6 +22,40 @@ if [ -e "$DEST" ]; then
   exit 1
 fi
 
+# 1. Auto-bootstrap shared Python venv if missing (e.g. fresh git clone on another machine)
+if [ ! -x "$SHARED/.venv/bin/python" ]; then
+  echo "[bootstrap] Creating shared Python virtual environment at $SHARED/.venv ..."
+  if command -v uv >/dev/null 2>&1; then
+    uv venv -q "$SHARED/.venv" --python 3.12 || uv venv -q "$SHARED/.venv"
+    uv pip install -q --python "$SHARED/.venv/bin/python" \
+      numpy pillow scipy soundfile onnxruntime kokoro-onnx opencv-python-headless gradio_client
+  else
+    python3 -m venv "$SHARED/.venv"
+    "$SHARED/.venv/bin/pip" install -q --upgrade pip
+    "$SHARED/.venv/bin/pip" install -q \
+      numpy pillow scipy soundfile onnxruntime kokoro-onnx opencv-python-headless gradio_client
+  fi
+fi
+
+# 2. Auto-bootstrap ONNX models (Kokoro-82M TTS + Depth-Anything-V2-small) if missing
+mkdir -p "$SHARED/models"
+if [ ! -s "$SHARED/models/kokoro-v1.0.onnx" ]; then
+  echo "[bootstrap] Downloading kokoro-v1.0.onnx (311 MB) ..."
+  curl -L --fail -o "$SHARED/models/kokoro-v1.0.onnx" \
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.onnx"
+fi
+if [ ! -s "$SHARED/models/voices-v1.0.bin" ]; then
+  echo "[bootstrap] Downloading voices-v1.0.bin (27 MB) ..."
+  curl -L --fail -o "$SHARED/models/voices-v1.0.bin" \
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
+fi
+if [ ! -s "$SHARED/models/depth_small.onnx" ]; then
+  echo "[bootstrap] Downloading depth_small.onnx (95 MB) ..."
+  curl -L --fail -o "$SHARED/models/depth_small.onnx" \
+    "https://huggingface.co/onnx-community/depth-anything-v2-small/resolve/main/onnx/model.onnx"
+fi
+
+# 3. Create isolated project directory structure
 mkdir -p "$DEST/production/src" \
          "$DEST/production/plates/depth" \
          "$DEST/production/plates/inputs" \
@@ -32,13 +66,13 @@ mkdir -p "$DEST/production/src" \
          "$DEST/production/scratch" \
          "$DEST/deliverables"
 
-# Symlink heavy shared read-only assets so new projects start in <1 second
+# 4. Symlink heavy shared read-only assets so new projects start in <1 second
 ln -s "$SHARED/.venv"    "$DEST/production/.venv"
 ln -s "$SHARED/models"   "$DEST/production/models"
 ln -s "$SHARED/fonts"    "$DEST/production/fonts"
 ln -s "$SHARED/textures" "$DEST/production/textures"
 
-# Copy reusable engine & template scripts
+# 5. Copy reusable engine & template scripts
 for f in fx.py depth.py flux.py tts.py timeline.py render.py audio.py scenes.py script_lines.py plates_batch.py thumbnail.py; do
   cp "$SHARED/src/$f" "$DEST/production/src/$f"
 done
